@@ -13,6 +13,7 @@ public class PlayerMove : MonoBehaviour
     float dir = -1;
     float gscal = 5f;
     float gfall = 4f;
+    float bspeed = 200f;
 
 
     bool canJump;
@@ -20,6 +21,7 @@ public class PlayerMove : MonoBehaviour
     bool lookLeft = false;
 
     Rigidbody2D rb;
+    public Rigidbody2D blasterPrefab;
     BoxCollider2D coll;
     Animator ani;
 
@@ -33,7 +35,7 @@ public class PlayerMove : MonoBehaviour
     }
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) {
+        if (Input.GetKeyDown(KeyCode.W)) {
             canJump = true;
         }
 
@@ -45,6 +47,9 @@ public class PlayerMove : MonoBehaviour
         {
             lookLeft = true;
             Turn();
+        }
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            Fire();
         }
 
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, castDist);
@@ -138,5 +143,19 @@ public class PlayerMove : MonoBehaviour
     void Turn() {
         dir *= -1;
         gameObject.transform.localScale = new Vector3(dir, 1, 1); 
+    }
+
+    void Fire() {
+        Rigidbody2D star = Instantiate(blasterPrefab, transform.position, transform.rotation) as Rigidbody2D;
+        
+        if (lookLeft == true)
+        {
+            star.GetComponent<Rigidbody2D>().AddForce(Vector2.right * bspeed);
+            star.gameObject.transform.localScale = new Vector3(1, 1, 1);
+        }
+        else {
+            star.GetComponent<Rigidbody2D>().AddForce(Vector2.left * bspeed);
+            star.gameObject.transform.localScale = new Vector3(-1, 1, 1);
+        }
     }
 }
