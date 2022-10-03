@@ -30,6 +30,7 @@ public class PlayerMove : MonoBehaviour
 
     public AudioClip jumpsfx;
     public AudioClip shootsfx;
+    public AudioClip walksfx;
 
     // Start is called before the first frame update
     void Start()
@@ -94,6 +95,8 @@ public class PlayerMove : MonoBehaviour
                 accel -= 1f * Time.deltaTime;
             }
             ani.SetBool("isWalking", true);
+
+            
         }
         else
         {
@@ -113,6 +116,12 @@ public class PlayerMove : MonoBehaviour
                 }
             }
             ani.SetBool("isWalking", false);
+
+            
+                
+
+            
+
         }
 
 
@@ -120,7 +129,35 @@ public class PlayerMove : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (fire == true)
+        if (Input.GetAxis("Horizontal") != 0)
+        {
+            if (isGrounded == true)
+            {
+                if (!aud.isPlaying)
+                {
+                    aud.clip = walksfx;
+                    aud.Play();
+                }
+
+            }
+            else
+            {
+                if (aud.isPlaying)
+                {
+                    aud.Stop();
+                }
+
+            }
+
+        }
+        else {
+            if (aud.isPlaying)
+            {
+                aud.Stop();
+            }
+        }
+
+            if (fire == true)
         {
             Fire();
             fire = false;
@@ -169,8 +206,7 @@ public class PlayerMove : MonoBehaviour
         {
             return;
         }
-        aud.clip = jumpsfx;
-        aud.Play();
+        AudioSource.PlayClipAtPoint(jumpsfx, this.gameObject.transform.position);
         isGrounded = false;
         rb.AddForce(Vector2.up * jstr, ForceMode2D.Impulse);
     }
@@ -181,8 +217,7 @@ public class PlayerMove : MonoBehaviour
     }
 
     void Fire() {
-        aud.clip = shootsfx;
-        aud.Play();
+        AudioSource.PlayClipAtPoint(shootsfx, this.gameObject.transform.position);
 
         Rigidbody2D star = Instantiate(blasterPrefab, transform.position, transform.rotation) as Rigidbody2D;
         
