@@ -20,6 +20,6 @@ public class CameraControl : MonoBehaviour
     void LateUpdate()
     {
         
-        transform.position = Vector3.SmoothDamp(transform.position, player.transform.position + offset, ref velocity, 1f);
+        transform.position = Vector3.SmoothDamp(transform.position, player.transform.position + offset, ref velocity, 0.6f);
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
 
-    float speed =  10f;
+    float speed = 10f;
     float jstr = 15f;
     public float accel = 0f;
     float moveX;
@@ -13,18 +13,23 @@ public class PlayerMove : MonoBehaviour
     float dir = -1;
     float gscal = 5f;
     float gfall = 4f;
-    float bspeed = 200f;
+    float bspeed = 600f;
+    public float shotspd;
 
 
     bool canJump;
     bool isGrounded;
     bool lookLeft = false;
+    bool fire;
 
     Rigidbody2D rb;
     public Rigidbody2D blasterPrefab;
     BoxCollider2D coll;
     Animator ani;
+    AudioSource aud;
 
+    public AudioClip jumpsfx;
+    public AudioClip shootsfx;
 
     // Start is called before the first frame update
     void Start()
@@ -32,9 +37,11 @@ public class PlayerMove : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<BoxCollider2D>();
         ani = GetComponent<Animator>();
+        aud = GetComponent<AudioSource>();
     }
     void Update()
     {
+        //Inputs
         if (Input.GetKeyDown(KeyCode.W)) {
             canJump = true;
         }
@@ -48,10 +55,11 @@ public class PlayerMove : MonoBehaviour
             lookLeft = true;
             Turn();
         }
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Fire();
+        if (Input.GetKeyDown(KeyCode.Space) && shotspd == 0) {
+            fire = true;
+            shotspd = 60f;
         }
-
+        //ray
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, castDist);
         Debug.DrawRay(transform.position, Vector2.down * castDist, new Color(255, 0, 255));
         if (hit.collider != null)
@@ -61,6 +69,16 @@ public class PlayerMove : MonoBehaviour
         else
         {
             isGrounded = false;
+        }
+
+        //acceleration calc
+
+        if (accel > 5) {
+            accel = 5;
+        }
+        if (accel < -5)
+        {
+            accel = -5;
         }
 
         moveX = Input.GetAxis("Horizontal");
@@ -75,34 +93,42 @@ public class PlayerMove : MonoBehaviour
             {
                 accel -= 1f * Time.deltaTime;
             }
+            ani.SetBool("isWalking", true);
         }
         else
         {
             if (accel > 0)
             {
-                accel -= 1f * Time.deltaTime;
-                if (accel > 0.05)
+                accel -= (3f * Time.deltaTime);
+                if (accel < 0.05)
                 {
                     accel = 0;
                 }
             }
             if (accel < 0)
             {
-                accel += 1f * Time.deltaTime;
-                if (accel < 0.05) {
+                accel += (3f * Time.deltaTime);
+                if (accel > -0.05) {
                     accel = 0;
                 }
             }
+            ani.SetBool("isWalking", false);
         }
 
-         
+
     }
 
     private void FixedUpdate()
     {
+        if (fire == true)
+        {
+            Fire();
+            fire = false;
+        }
         HorizontalMove();
         if (canJump == true) {
             canJump = false;
+            
             Jump();
         }
         if (rb.velocity.y >= 0)
@@ -114,18 +140,26 @@ public class PlayerMove : MonoBehaviour
         {
             rb.gravityScale = gfall;
         }
+
+        if (shotspd > 0)
+        {
+            shotspd -= 1;
+        }
+
     }
+
+ 
 
     void HorizontalMove()
     {
-        rb.velocity = new Vector3((moveX * speed) + accel, rb.velocity.y);
+        rb.velocity = new Vector3((moveX * speed)+accel, rb.velocity.y);
         if (rb.velocity.x != 0)
         {
-            ani.SetBool("isWalking", true);
+            //ani.SetBool("isWalking", true);
         }
         else
         {
-            ani.SetBool("isWalking", false);
+            //ani.SetBool("isWalking", false);
         }
 
     }
@@ -135,7 +169,8 @@ public class PlayerMove : MonoBehaviour
         {
             return;
         }
-
+        aud.clip = jumpsfx;
+        aud.Play();
         isGrounded = false;
         rb.AddForce(Vector2.up * jstr, ForceMode2D.Impulse);
     }
@@ -146,16 +181,25 @@ public class PlayerMove : MonoBehaviour
     }
 
     void Fire() {
+        aud.clip = shootsfx;
+        aud.Play();
+
         Rigidbody2D star = Instantiate(blasterPrefab, transform.position, transform.rotation) as Rigidbody2D;
         
         if (lookLeft == true)
         {
             star.GetComponent<Rigidbody2D>().AddForce(Vector2.right * bspeed);
             star.gameObject.transform.localScale = new Vector3(1, 1, 1);
+            accel -= 5;
+            rb.AddForce(Vector2.left * 30f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
         }
         else {
             star.GetComponent<Rigidbody2D>().AddForce(Vector2.left * bspeed);
             star.gameObject.transform.localScale = new Vector3(-1, 1, 1);
+            accel += 5;
+            rb.AddForce(Vector2.right * 30f, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
         }
     }
 }
